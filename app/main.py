@@ -57,4 +57,4 @@ app.include_router(orders.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Pet Shop API"}
+    return {"message": "API Running Successfully"}
