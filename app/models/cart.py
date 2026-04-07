@@ -16,3 +16,6 @@ class CartResponse(CartBase):
     id: UUID
     user_id: UUID
     created_at: datetime
+
+class CartUpdate(BaseModel):
+    quantity: Optional[int] = Field(None, ge=1)

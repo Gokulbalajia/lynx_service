@@ -35,5 +35,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Client = Depends
     if not verify_password(form_data.password, user["password"]):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
-    access_token = create_access_token(data={"sub": str(user["id"]), "role": "user"})
+    # Fetch role name
+    role_name = "user"
+    if user.get("role_id"):
+        role_res = db.table("roles").select("name").eq("id", user["role_id"]).execute()
+        if role_res.data:
+            role_name = role_res.data[0]["name"]
+    
+    access_token = create_access_token(data={"sub": str(user["id"]), "role": role_name})
     return {"access_token": access_token, "token_type": "bearer"}

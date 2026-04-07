@@ -39,3 +39,14 @@ class PetResponse(PetBase):
     id: UUID
     created_at: datetime
     images: Optional[List[PetImageBase]] = None
+
+class PetUpdate(BaseModel):
+    name: Optional[str] = None
+    pet_type_id: Optional[UUID] = None
+    breed_id: Optional[UUID] = None
+    age_months: Optional[int] = Field(None, ge=0)
+    gender: Optional[str] = None
+    price: Optional[Decimal] = Field(None, ge=0)
+    stock: Optional[int] = Field(None, ge=0)
+    description: Optional[str] = None
+    is_available: Optional[bool] = None
