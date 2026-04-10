@@ -16,7 +16,7 @@ def get_cart(current_user: dict = Depends(get_current_user), db: Client = Depend
 @router.post("/", response_model=CartResponse)
 def add_to_cart(item: CartCreate, current_user: dict = Depends(get_current_user), db: Client = Depends(get_supabase)):
     # Automatically assign current user id
-    cart_item = item.model_dump()
+    cart_item = item.model_dump(mode="json")
     cart_item["user_id"] = str(current_user["id"])
     
     res = db.table("cart").insert(cart_item).execute()

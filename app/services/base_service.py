@@ -21,10 +21,14 @@ class BaseService:
 
     def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
         response = self.client.table(self.table_name).insert(data).execute()
+        if not response.data:
+            raise Exception(f"Failed to create record in {self.table_name}")
         return response.data[0]
 
     def update(self, id: UUID, data: Dict[str, Any]) -> Dict[str, Any]:
         response = self.client.table(self.table_name).update(data).eq("id", str(id)).execute()
+        if not response.data:
+            raise Exception(f"Failed to update record in {self.table_name} with ID {id}")
         return response.data[0]
 
     def delete(self, id: UUID) -> bool:

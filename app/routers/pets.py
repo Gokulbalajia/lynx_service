@@ -28,19 +28,39 @@ def get_pet(id: UUID, db: Client = Depends(get_supabase)):
 
 @router.post("/", response_model=PetResponse, status_code=status.HTTP_201_CREATED)
 def create_pet(pet: PetCreate, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):
-    pet_dict = pet.model_dump(exclude={"images"})
+    pet_dict = pet.model_dump(mode="json", exclude={"images"})
     res = db.table("pets").insert(pet_dict).execute()
     if not res.data:
         raise HTTPException(status_code=500, detail="Failed to create pet")
-    return res.data[0]
+    
+    pet_id = res.data[0]["id"]
+
+    # Insert Images
+    if pet.images:
+        for img in pet.images:
+            i_dict = img.model_dump(mode="json")
+            i_dict["pet_id"] = pet_id
+            db.table("pet_images").insert(i_dict).execute()
+
+    # Refetch full object
+    return get_pet(pet_id, db)
 
 @router.put("/{id}", response_model=PetResponse)
 def update_pet(id: UUID, pet: PetUpdate, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):
+    # 1. Update Core Pet
     pet_dict = pet.model_dump(exclude_unset=True, exclude={"images"})
-    res = db.table("pets").update(pet_dict).eq("id", str(id)).execute()
-    if not res.data:
-        raise HTTPException(status_code=404, detail="Pet not found")
-    return res.data[0]
+    if pet_dict:
+        db.table("pets").update(pet_dict).eq("id", str(id)).execute()
+    
+    # 2. Replace Images
+    if pet.images is not None:
+        db.table("pet_images").delete().eq("pet_id", str(id)).execute()
+        for img in pet.images:
+            i_dict = img.model_dump(mode="json")
+            i_dict["pet_id"] = str(id)
+            db.table("pet_images").insert(i_dict).execute()
+
+    return get_pet(id, db)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_pet(id: UUID, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):

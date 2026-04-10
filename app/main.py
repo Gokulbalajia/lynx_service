@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, factory, products, pets, cart, orders
+from app.routers import auth, factory, products, pets, cart, orders, addresses, payments, shipments, users
 from app.models.product import CategoryResponse
-from app.models.pet import PetTypeResponse
+from app.models.pet import PetTypeResponse, PetBreedResponse
 from app.core.config import settings
 
 app = FastAPI(
@@ -22,6 +22,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(auth.router)
+app.include_router(users.router)
 
 # Categories
 app.include_router(
@@ -43,6 +44,16 @@ app.include_router(
     )
 )
 
+# Pet Breeds
+app.include_router(
+    factory.create_crud_router(
+        table_name="pet_breeds",
+        response_model=PetBreedResponse,
+        name="pet-breeds",
+        tags=["Pet Breeds"]
+    )
+)
+
 # Products
 app.include_router(products.router)
 
@@ -54,6 +65,15 @@ app.include_router(cart.router)
 
 # Orders
 app.include_router(orders.router)
+
+# Addresses
+app.include_router(addresses.router)
+
+# Payments
+app.include_router(payments.router)
+
+# Shipments
+app.include_router(shipments.router)
 
 @app.get("/")
 def read_root():

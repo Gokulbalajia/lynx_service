@@ -50,3 +50,4 @@ class PetUpdate(BaseModel):
     stock: Optional[int] = Field(None, ge=0)
     description: Optional[str] = None
     is_available: Optional[bool] = None
+    images: Optional[List[PetImageBase]] = None

@@ -23,12 +23,12 @@ def get_all_orders(_admin: dict = Depends(admin_required), db: Client = Depends(
     return res.data
 
 @router.post("/checkout", response_model=OrderResponse)
-def checkout(order_data: OrderCreate, current_user: dict = Depends(get_current_user), db_admin: Client = Depends(get_supabase_admin)):
+def checkout(order_data: OrderCreate, current_user: dict = Depends(get_current_user), db: Client = Depends(get_supabase)):
     # Ensure user is creating an order for themselves
     if str(order_data.user_id) != str(current_user["id"]):
         raise HTTPException(status_code=403, detail="Cannot create order for another user")
     
-    checkout_service = CheckoutService(db_admin)
+    checkout_service = CheckoutService(db)
     return checkout_service.process_checkout(order_data)
 
 @router.get("/{order_id}", response_model=OrderResponse)

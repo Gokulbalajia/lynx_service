@@ -64,3 +64,6 @@ class ProductUpdate(BaseModel):
     short_description: Optional[str] = None
     brand: Optional[str] = None
     is_active: Optional[bool] = None
+    details: Optional[ProductDetailBase] = None
+    variants: Optional[List[ProductVariantBase]] = None
+    images: Optional[List[ProductImageBase]] = None
