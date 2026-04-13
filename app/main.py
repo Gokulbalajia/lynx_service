@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, factory, products, pets, cart, orders, addresses, payments, shipments, users
+from app.routers import auth, factory, products, pets, cart, orders, addresses, payments, shipments, users, upload
 from app.models.product import CategoryResponse
 from app.models.pet import PetTypeResponse, PetBreedResponse
 from app.core.config import settings
@@ -74,6 +74,9 @@ app.include_router(payments.router)
 
 # Shipments
 app.include_router(shipments.router)
+
+# Upload
+app.include_router(upload.router)
 
 @app.get("/")
 def read_root():
