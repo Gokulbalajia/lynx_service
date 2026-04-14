@@ -1,9 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, factory, products, pets, cart, orders, addresses, payments, shipments, users, upload
+from app.endpoints import (
+    auth_endpoint as auth, 
+    factory, 
+    product_endpoint as products, 
+    pet_endpoint as pets, 
+    cart_endpoint as cart, 
+    order_endpoint as orders, 
+    address_endpoint as addresses, 
+    payment_endpoint as payments, 
+    shipment_endpoint as shipments, 
+    user_endpoint as users, 
+    upload_endpoint as upload
+)
 from app.models.product import CategoryResponse
 from app.models.pet import PetTypeResponse, PetBreedResponse
-from app.core.config import settings
+from app.config import settings
 
 app = FastAPI(
     title="Pet Shop API",
