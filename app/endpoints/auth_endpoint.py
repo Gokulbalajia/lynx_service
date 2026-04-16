@@ -2,16 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.auth.auth import create_access_token, verify_password, get_password_hash
 from app.db.connection import get_supabase
-from app.models.user import UserCreate, UserResponse, Token
+from app.models.user_model import UserCreate, UserResponse
+from app.models.auth_model import Token
+from app.query.auth_query import AuthQuery
 from supabase import Client
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=UserResponse)
 def register(user_data: UserCreate, db: Client = Depends(get_supabase)):
+    query = AuthQuery(db)
     # Check if user already exists
-    existing = db.table("users").select("*").eq("email", user_data.email).execute()
-    if existing.data:
+    if query.get_by_email(user_data.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Hash password
@@ -19,28 +21,26 @@ def register(user_data: UserCreate, db: Client = Depends(get_supabase)):
     user_dict["password"] = get_password_hash(user_dict["password"])
     
     # Create user
-    res = db.table("users").insert(user_dict).execute()
-    if not res.data:
+    user = query.create_user(user_dict)
+    if not user:
         raise HTTPException(status_code=500, detail="Failed to create user")
     
-    return res.data[0]
+    return user
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Client = Depends(get_supabase)):
-    res = db.table("users").select("*").eq("email", form_data.username).execute()
-    if not res.data:
+    query = AuthQuery(db)
+    user = query.get_by_email(form_data.username)
+    if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
-    user = res.data[0]
     if not verify_password(form_data.password, user["password"]):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
     # Fetch role name
     role_name = "user"
     if user.get("role_id"):
-        role_res = db.table("roles").select("name").eq("id", user["role_id"]).execute()
-        if role_res.data:
-            role_name = role_res.data[0]["name"]
+        role_name = query.get_role_name(user["role_id"])
     
     access_token = create_access_token(data={"sub": str(user["id"]), "role": role_name})
     return {"access_token": access_token, "token_type": "bearer"}

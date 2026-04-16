@@ -4,17 +4,6 @@ from datetime import datetime, date
 from uuid import UUID
 from decimal import Decimal
 
-class CategoryBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-
-class CategoryCreate(CategoryBase):
-    pass
-
-class CategoryResponse(CategoryBase):
-    id: UUID
-    created_at: datetime
-
 class ProductImageBase(BaseModel):
     image_url: str
     is_primary: bool = False
@@ -42,7 +31,7 @@ class ProductDetailBase(BaseModel):
 
 class ProductBase(BaseModel):
     name: str
-    category_id: UUID
+    category_id: Optional[UUID] = None
     short_description: Optional[str] = None
     brand: Optional[str] = None
     is_active: bool = True

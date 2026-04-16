@@ -24,23 +24,3 @@ class OrderResponse(OrderBase):
     user_id: UUID
     created_at: datetime
     items: Optional[List[OrderItemBase]] = None
-
-class PaymentBase(BaseModel):
-    order_id: UUID
-    payment_method: str
-    transaction_id: Optional[str] = None
-    payment_status: str = "Pending"
-
-class PaymentResponse(PaymentBase):
-    id: UUID
-    paid_at: Optional[datetime] = None
-
-class ShipmentBase(BaseModel):
-    order_id: UUID
-    tracking_id: Optional[str] = None
-    shipment_status: str = "Processing"
-
-class ShipmentResponse(ShipmentBase):
-    id: UUID
-    shipped_at: Optional[datetime] = None
-    delivered_at: Optional[datetime] = None

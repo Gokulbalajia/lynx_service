@@ -3,96 +3,54 @@ from typing import List, Optional
 from uuid import UUID
 from app.db.connection import get_supabase
 from app.auth.auth import admin_required
-from app.models.product import ProductResponse, ProductCreate, ProductUpdate
+from app.models.product_model import ProductResponse, ProductCreate, ProductUpdate
+from app.query.product_query import ProductQuery
 from supabase import Client
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get("/", response_model=List[ProductResponse])
 def get_products(category_id: Optional[UUID] = None, db: Client = Depends(get_supabase)):
-    query = db.table("products").select("*, details:product_details(*), variants:product_variants(*), images:product_images(*)")
-    if category_id:
-        query = query.eq("category_id", str(category_id))
-    res = query.execute()
-    return res.data
+    query = ProductQuery(db)
+    return query.get_all_with_relations(category_id)
 
 @router.get("/{id}", response_model=ProductResponse)
 def get_product(id: UUID, db: Client = Depends(get_supabase)):
-    try:
-        res = db.table("products").select("*, details:product_details(*), variants:product_variants(*), images:product_images(*)").eq("id", str(id)).single().execute()
-        if not res.data:
-            raise HTTPException(status_code=404, detail="Product not found")
-        return res.data
-    except Exception:
+    query = ProductQuery(db)
+    product = query.get_by_id_with_relations(id)
+    if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    return product
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(product: ProductCreate, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):
-    # core product insert
+    query = ProductQuery(db)
+    
     product_dict = product.model_dump(mode="json", exclude={"details", "variants", "images"})
-    res = db.table("products").insert(product_dict).execute()
-    if not res.data:
+    details_dict = product.details.model_dump(mode="json") if product.details else None
+    variants_list = [v.model_dump(mode="json") for v in product.variants] if product.variants else None
+    images_list = [img.model_dump(mode="json") for img in product.images] if product.images else None
+
+    res = query.create_product(product_dict, details_dict, variants_list, images_list)
+    if not res:
         raise HTTPException(status_code=500, detail="Failed to create product")
-    
-    product_id = res.data[0]["id"]
-
-    # Insert Details
-    if product.details:
-        details_dict = product.details.model_dump(mode="json")
-        details_dict["product_id"] = product_id
-        db.table("product_details").insert(details_dict).execute()
-    
-    # Insert Variants
-    if product.variants:
-        for variant in product.variants:
-            v_dict = variant.model_dump(mode="json")
-            v_dict["product_id"] = product_id
-            db.table("product_variants").insert(v_dict).execute()
-            
-    # Insert Images
-    if product.images:
-        for img in product.images:
-            i_dict = img.model_dump(mode="json")
-            i_dict["product_id"] = product_id
-            db.table("product_images").insert(i_dict).execute()
-
-    # Refetch full object
-    return get_product(product_id, db)
+    return res
 
 @router.put("/{id}", response_model=ProductResponse)
 def update_product(id: UUID, product: ProductUpdate, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):
-    # 1. Update Core Product
+    query = ProductQuery(db)
+    
     product_dict = product.model_dump(exclude_unset=True, exclude={"details", "variants", "images"})
-    if product_dict:
-        db.table("products").update(product_dict).eq("id", str(id)).execute()
-    
-    # 2. Update Details (Upsert style)
-    if product.details is not None:
-        details_dict = product.details.model_dump(mode="json", exclude_unset=True)
-        details_dict["product_id"] = str(id)
-        db.table("product_details").upsert(details_dict, on_conflict="product_id").execute()
-    
-    # 3. Replace Variants
-    if product.variants is not None:
-        db.table("product_variants").delete().eq("product_id", str(id)).execute()
-        for variant in product.variants:
-            v_dict = variant.model_dump(mode="json")
-            v_dict["product_id"] = str(id)
-            db.table("product_variants").insert(v_dict).execute()
-            
-    # 4. Replace Images
-    if product.images is not None:
-        db.table("product_images").delete().eq("product_id", str(id)).execute()
-        for img in product.images:
-            i_dict = img.model_dump(mode="json")
-            i_dict["product_id"] = str(id)
-            db.table("product_images").insert(i_dict).execute()
+    details_dict = product.details.model_dump(mode="json", exclude_unset=True) if product.details else None
+    variants_list = [v.model_dump(mode="json") for v in product.variants] if product.variants is not None else None
+    images_list = [img.model_dump(mode="json") for img in product.images] if product.images is not None else None
 
-    return get_product(id, db)
+    return query.update_product(id, product_dict, details_dict, variants_list, images_list)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(id: UUID, db: Client = Depends(get_supabase), _admin=Depends(admin_required)):
-    res = db.table("products").delete().eq("id", str(id)).execute()
-    if not res.data:
+    query = ProductQuery(db)
+    res = query.delete_product(id)
+    if not res:
         raise HTTPException(status_code=404, detail="Product not found")
     return None

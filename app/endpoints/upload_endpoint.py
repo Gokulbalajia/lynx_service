@@ -1,14 +1,15 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends
 from app.db.connection import get_supabase_admin
+from app.models.upload_model import UploadResponse
+from app.query.upload_query import UploadQuery
 from supabase import Client
-import uuid
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp", "image/jpg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
-@router.post("/upload-image")
+@router.post("/upload-image", response_model=UploadResponse)
 async def upload_image(
     file: UploadFile = File(...),
     db_admin: Client = Depends(get_supabase_admin)
@@ -28,35 +29,13 @@ async def upload_image(
             detail="File size exceeds the 5MB limit."
         )
     
-    # Reset file pointer if needed, but we already have 'content' for upload
+    query = UploadQuery(db_admin)
+    public_url = await query.upload_file(content, file.filename, file.content_type)
     
-    # 3. Generate Unique Filename to avoid collisions
-    unique_filename = f"{uuid.uuid4()}_{file.filename}"
-    file_path = f"images/{unique_filename}"
-    
-    # 4. Upload to Supabase Storage
-    try:
-        bucket_name = "petshop-images"
-        
-        # Upload context
-        # supabase-py storage upload accepts bytes
-        res = db_admin.storage.from_(bucket_name).upload(
-            path=file_path,
-            file=content,
-            file_options={"content-type": file.content_type}
-        )
-        
-        # 5. Generate Public URL
-        # get_public_url returns the direct access URL
-        public_url = db_admin.storage.from_(bucket_name).get_public_url(file_path)
-        
-        return {"image_url": public_url}
-        
-    except Exception as e:
-        # Log error if possible
+    if not public_url:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload image to Supabase: {str(e)}"
+            detail="Failed to upload image to Supabase"
         )
-    finally:
-        await file.close()
+        
+    return {"image_url": public_url}

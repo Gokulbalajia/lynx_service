@@ -28,12 +28,3 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    user_id: Optional[UUID] = None
-    email: Optional[str] = None
-    role: Optional[str] = None
