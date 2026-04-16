@@ -4,19 +4,6 @@ from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
 
-class PetTypeBase(BaseModel):
-    name: str
-
-class PetTypeResponse(PetTypeBase):
-    id: UUID
-
-class PetBreedBase(BaseModel):
-    name: str
-    pet_type_id: UUID
-
-class PetBreedResponse(PetBreedBase):
-    id: UUID
-
 class PetImageBase(BaseModel):
     image_url: str
     is_primary: bool = False

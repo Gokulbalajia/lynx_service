@@ -1,95 +1,51 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.endpoints import (
-    auth_endpoint as auth, 
-    factory, 
-    product_endpoint as products, 
-    pet_endpoint as pets, 
-    cart_endpoint as cart, 
-    order_endpoint as orders, 
-    address_endpoint as addresses, 
-    payment_endpoint as payments, 
-    shipment_endpoint as shipments, 
-    user_endpoint as users, 
-    upload_endpoint as upload
+    auth_endpoint,
+    user_endpoint,
+    category_endpoint,
+    pet_type_endpoint,
+    pet_breed_endpoint,
+    product_endpoint,
+    pet_endpoint,
+    cart_endpoint,
+    order_endpoint,
+    address_endpoint,
+    payment_endpoint,
+    shipment_endpoint,
+    upload_endpoint
 )
-from app.models.product import CategoryResponse
-from app.models.pet import PetTypeResponse, PetBreedResponse
-from app.config import settings
 
 app = FastAPI(
     title="Pet Shop API",
-    description="Production-ready FastAPI backend for Pet Shop marketplace",
+    description="Clean Architecture FastAPI backend",
     version="1.0.0"
 )
 
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include Routers
-app.include_router(auth.router)
-app.include_router(users.router)
-
-# Categories
-app.include_router(
-    factory.create_crud_router(
-        table_name="categories",
-        response_model=CategoryResponse,
-        name="categories",
-        tags=["Categories"]
-    )
-)
-
-# Pet Types
-app.include_router(
-    factory.create_crud_router(
-        table_name="pet_types",
-        response_model=PetTypeResponse,
-        name="pet-types",
-        tags=["Pet Types"]
-    )
-)
-
-# Pet Breeds
-app.include_router(
-    factory.create_crud_router(
-        table_name="pet_breeds",
-        response_model=PetBreedResponse,
-        name="pet-breeds",
-        tags=["Pet Breeds"]
-    )
-)
-
-# Products
-app.include_router(products.router)
-
-# Pets
-app.include_router(pets.router)
-
-# Cart
-app.include_router(cart.router)
-
-# Orders
-app.include_router(orders.router)
-
-# Addresses
-app.include_router(addresses.router)
-
-# Payments
-app.include_router(payments.router)
-
-# Shipments
-app.include_router(shipments.router)
-
-# Upload
-app.include_router(upload.router)
+app.include_router(auth_endpoint.router)
+app.include_router(user_endpoint.router)
+app.include_router(category_endpoint.router)
+app.include_router(pet_type_endpoint.router)
+app.include_router(pet_breed_endpoint.router)
+app.include_router(product_endpoint.router)
+app.include_router(pet_endpoint.router)
+app.include_router(cart_endpoint.router)
+app.include_router(order_endpoint.router)
+app.include_router(address_endpoint.router)
+app.include_router(payment_endpoint.router)
+app.include_router(shipment_endpoint.router)
+app.include_router(upload_endpoint.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "API Running Successfully"}
+    return {"message": "Backend Running Successfully"}
