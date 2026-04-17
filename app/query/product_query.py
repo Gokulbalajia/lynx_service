@@ -2,6 +2,7 @@ from app.query.base_query import BaseQuery
 from supabase import Client
 from typing import Dict, Any, List, Optional
 from uuid import UUID
+from fastapi.encoders import jsonable_encoder
 
 class ProductQuery(BaseQuery):
     def __init__(self, client: Client):
@@ -19,6 +20,7 @@ class ProductQuery(BaseQuery):
         return res.data[0] if res.data else None
 
     def create_product(self, product_dict: Dict[str, Any], details: Optional[Dict[str, Any]], variants: Optional[List[Dict[str, Any]]], images: Optional[List[Dict[str, Any]]]):
+        product_dict = jsonable_encoder(product_dict)
         res = self.client.table("products").insert(product_dict).execute()
         if not res.data:
             return None
@@ -26,16 +28,19 @@ class ProductQuery(BaseQuery):
         product_id = res.data[0]["id"]
 
         if details:
+            details = jsonable_encoder(details)
             details["product_id"] = product_id
             self.client.table("product_details").insert(details).execute()
         
         if variants:
             for variant in variants:
+                variant = jsonable_encoder(variant)
                 variant["product_id"] = product_id
                 self.client.table("product_variants").insert(variant).execute()
                 
         if images:
             for img in images:
+                img = jsonable_encoder(img)
                 img["product_id"] = product_id
                 self.client.table("product_images").insert(img).execute()
 
@@ -43,21 +48,25 @@ class ProductQuery(BaseQuery):
 
     def update_product(self, id: UUID, product_dict: Dict[str, Any], details: Optional[Dict[str, Any]], variants: Optional[List[Dict[str, Any]]], images: Optional[List[Dict[str, Any]]]):
         if product_dict:
+            product_dict = jsonable_encoder(product_dict)
             self.client.table("products").update(product_dict).eq("id", str(id)).execute()
         
         if details is not None:
+            details = jsonable_encoder(details)
             details["product_id"] = str(id)
             self.client.table("product_details").upsert(details, on_conflict="product_id").execute()
         
         if variants is not None:
             self.client.table("product_variants").delete().eq("product_id", str(id)).execute()
             for variant in variants:
+                variant = jsonable_encoder(variant)
                 variant["product_id"] = str(id)
                 self.client.table("product_variants").insert(variant).execute()
                 
         if images is not None:
             self.client.table("product_images").delete().eq("product_id", str(id)).execute()
             for img in images:
+                img = jsonable_encoder(img)
                 img["product_id"] = str(id)
                 self.client.table("product_images").insert(img).execute()
 

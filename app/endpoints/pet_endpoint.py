@@ -39,6 +39,11 @@ def update_pet(id: UUID, pet: PetUpdate, db: Client = Depends(get_supabase), _ad
     pet_dict = pet.model_dump(exclude_unset=True, exclude={"images"})
     images_list = [img.model_dump(mode="json") for img in pet.images] if pet.images is not None else None
 
+    # Check if pet exists
+    existing_pet = query.get_by_id_with_relations(id)
+    if not existing_pet:
+        raise HTTPException(status_code=404, detail="Pet not found")
+
     return query.update_pet(id, pet_dict, images_list)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

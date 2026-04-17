@@ -1,6 +1,7 @@
 from typing import Any, List, Optional, Dict
 from supabase import Client
 from uuid import UUID
+from fastapi.encoders import jsonable_encoder
 
 class BaseQuery:
     def __init__(self, client: Client, table_name: str):
@@ -20,12 +21,14 @@ class BaseQuery:
         return response.data[0] if response.data else None
 
     def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        data = jsonable_encoder(data)
         response = self.client.table(self.table_name).insert(data).execute()
         if not response.data:
             raise Exception(f"Failed to create record in {self.table_name}")
         return response.data[0]
 
     def update(self, id: UUID, data: Dict[str, Any]) -> Dict[str, Any]:
+        data = jsonable_encoder(data)
         response = self.client.table(self.table_name).update(data).eq("id", str(id)).execute()
         if not response.data:
             raise Exception(f"Failed to update record in {self.table_name} with ID {id}")
