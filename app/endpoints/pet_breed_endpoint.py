@@ -34,7 +34,7 @@ def update_pet_breed(id: UUID, data: PetBreedUpdate, db: Client = Depends(get_su
         raise HTTPException(status_code=404, detail="Pet breed not found")
     
     try:
-        query.update_pet_breed(id, data.model_dump())
+        query.update_pet_breed(id, data.model_dump(mode="json"))
         return query.get_by_id(id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -24,7 +24,7 @@ def get_one(id: UUID, db: Client = Depends(get_supabase)):
 @router.post("/", response_model=PetTypeResponse, status_code=status.HTTP_201_CREATED)
 def create_pet_type(data: PetTypeCreate, db: Client = Depends(get_supabase)):
     query = PetTypeQuery(db)
-    return query.create(data.model_dump())
+    return query.create(data.model_dump(mode="json"))
 
 @router.put("/{id}", response_model=PetTypeResponse)
 def update_pet_type(id: UUID, data: PetTypeUpdate, db: Client = Depends(get_supabase)):
@@ -35,7 +35,7 @@ def update_pet_type(id: UUID, data: PetTypeUpdate, db: Client = Depends(get_supa
         raise HTTPException(status_code=404, detail="Pet type not found")
     
     try:
-        query.update_pet_type(id, data.model_dump())
+        query.update_pet_type(id, data.model_dump(mode="json"))
         return query.get_by_id(id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

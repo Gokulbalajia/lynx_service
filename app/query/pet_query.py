@@ -2,6 +2,7 @@ from app.query.base_query import BaseQuery
 from supabase import Client
 from typing import Dict, Any, List, Optional
 from uuid import UUID
+from fastapi.encoders import jsonable_encoder
 
 class PetQuery(BaseQuery):
     def __init__(self, client: Client):
@@ -19,6 +20,7 @@ class PetQuery(BaseQuery):
         return res.data[0] if res.data else None
 
     def create_pet(self, pet_dict: Dict[str, Any], images: Optional[List[Dict[str, Any]]]):
+        pet_dict = jsonable_encoder(pet_dict)
         res = self.client.table("pets").insert(pet_dict).execute()
         if not res.data:
             return None
@@ -27,6 +29,7 @@ class PetQuery(BaseQuery):
 
         if images:
             for img in images:
+                img = jsonable_encoder(img)
                 img["pet_id"] = pet_id
                 self.client.table("pet_images").insert(img).execute()
 
@@ -34,11 +37,13 @@ class PetQuery(BaseQuery):
 
     def update_pet(self, id: UUID, pet_dict: Dict[str, Any], images: Optional[List[Dict[str, Any]]]):
         if pet_dict:
+            pet_dict = jsonable_encoder(pet_dict)
             self.client.table("pets").update(pet_dict).eq("id", str(id)).execute()
         
         if images is not None:
             self.client.table("pet_images").delete().eq("pet_id", str(id)).execute()
             for img in images:
+                img = jsonable_encoder(img)
                 img["pet_id"] = str(id)
                 self.client.table("pet_images").insert(img).execute()
 

@@ -45,6 +45,11 @@ def update_product(id: UUID, product: ProductUpdate, db: Client = Depends(get_su
     variants_list = [v.model_dump(mode="json") for v in product.variants] if product.variants is not None else None
     images_list = [img.model_dump(mode="json") for img in product.images] if product.images is not None else None
 
+    # Check if product exists
+    existing_product = query.get_by_id_with_relations(id)
+    if not existing_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
     return query.update_product(id, product_dict, details_dict, variants_list, images_list)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
