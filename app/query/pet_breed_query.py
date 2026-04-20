@@ -8,7 +8,7 @@ class PetBreedQuery(BaseQuery):
         super().__init__(client, "pet_breeds")
 
     def get_all(self, query_params: Dict[str, Any] = None) -> List[Dict[str, Any]]:
-        query = self.client.table(self.table_name).select("id,name,pet_type_id,pet_types(id,name)")
+        query = self.client.table(self.table_name).select("id,name,pet_types(name)")
         if query_params:
             for key, value in query_params.items():
                 query = query.eq(key, value)
@@ -16,7 +16,7 @@ class PetBreedQuery(BaseQuery):
         return response.data
 
     def get_by_id(self, id: UUID) -> Optional[Dict[str, Any]]:
-        response = self.client.table(self.table_name).select("id,name,pet_type_id,pet_types(id,name)").eq("id", str(id)).execute()
+        response = self.client.table(self.table_name).select("id,name,pet_types(name)").eq("id", str(id)).execute()
         return response.data[0] if response.data else None
 
     def create_pet_breed(self, data: dict):
