@@ -3,12 +3,13 @@ from uuid import UUID
 from typing import Optional
 
 class PetTypeInfo(BaseModel):
-    id: UUID
+    id: Optional[UUID] = None
     name: str
 
 class PetBreedBase(BaseModel):
     name: str
-    pet_type_id: UUID
+    description: Optional[str] = None
+    pet_type_id: Optional[UUID] = None
 
 class PetBreedResponse(PetBreedBase):
     id: UUID
