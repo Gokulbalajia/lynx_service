@@ -46,6 +46,7 @@ class ProductResponse(ProductBase):
     created_at: datetime
     details: Optional[ProductDetailBase] = None
     variants: Optional[List[ProductVariantResponse]] = None
+    product_images: Optional[List[ProductImageBase]] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
