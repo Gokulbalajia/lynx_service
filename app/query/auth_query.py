@@ -7,7 +7,7 @@ class AuthQuery(BaseQuery):
         super().__init__(client, "users")
 
     def get_by_email(self, email: str):
-        res = self.client.table("users").select("*").eq("email", email).execute()
+        res = self.client.table("users").select("*, roles(name)").eq("email", email).execute()
         return res.data[0] if res.data else None
 
     def create_user(self, user_data: Dict[str, Any]):
