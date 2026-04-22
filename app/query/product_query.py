@@ -9,14 +9,14 @@ class ProductQuery(BaseQuery):
         super().__init__(client, "products")
 
     def get_all_with_relations(self, category_id: Optional[UUID] = None) -> List[Dict[str, Any]]:
-        query = self.client.table("products").select("*, details:product_details(*), variants:product_variants(*), product_images(image_url)")
+        query = self.client.table("products").select("*, product_images(image_url), product_variants(*), categories(name)")
         if category_id:
             query = query.eq("category_id", str(category_id))
         res = query.execute()
         return res.data
 
     def get_by_id_with_relations(self, id: UUID) -> Optional[Dict[str, Any]]:
-        res = self.client.table("products").select("*, details:product_details(*), variants:product_variants(*), product_images(image_url)").eq("id", str(id)).execute()
+        res = self.client.table("products").select("*, product_images(image_url), product_variants(*), categories(name)").eq("id", str(id)).execute()
         return res.data[0] if res.data else None
 
     def create_product(self, product_dict: Dict[str, Any], details: Optional[Dict[str, Any]], variants: Optional[List[Dict[str, Any]]], images: Optional[List[Dict[str, Any]]]):

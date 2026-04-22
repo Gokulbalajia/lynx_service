@@ -11,7 +11,7 @@ class PetImageBase(BaseModel):
 class PetBase(BaseModel):
     name: str
     pet_type_id: UUID
-    breed_id: UUID
+    breed_id: Optional[UUID] = None
     age_months: Optional[int] = Field(None, ge=0)
     gender: Optional[str] = None
     price: Decimal = Field(..., ge=0)
