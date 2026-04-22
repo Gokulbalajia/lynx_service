@@ -3,6 +3,9 @@ from typing import Optional, List
 from datetime import datetime, date
 from uuid import UUID
 from decimal import Decimal
+ 
+class CategoryInfo(BaseModel):
+    name: str
 
 class ProductImageBase(BaseModel):
     image_url: str
@@ -45,8 +48,9 @@ class ProductResponse(ProductBase):
     id: UUID
     created_at: datetime
     details: Optional[ProductDetailBase] = None
-    variants: Optional[List[ProductVariantResponse]] = None
+    product_variants: Optional[List[ProductVariantResponse]] = None
     product_images: Optional[List[ProductImageBase]] = None
+    categories: Optional[CategoryInfo] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None

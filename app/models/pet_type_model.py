@@ -9,6 +9,7 @@ class PetTypeCreate(PetTypeBase):
 
 class PetTypeResponse(PetTypeBase):
     id: UUID
+    description: Optional[str] = None
 
 class PetTypeUpdate(BaseModel):
     name: str
